@@ -20,7 +20,7 @@ export default function AuthModal({ role, onClose, onLoginSuccess }) {
 
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('name,specialty,role')
+                .select('full_name , specialty , role')
                 .eq('id', userId)
                 .single();
 
