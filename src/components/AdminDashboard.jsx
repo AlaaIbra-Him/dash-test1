@@ -186,74 +186,34 @@ export default function AdminDashboard() {
   //   }
   // };
 
-
   const handleCreateDoctor = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      console.log("🔹 Attempting to create user in Supabase Auth...");
-
-      // 1️⃣ إنشاء المستخدم في Supabase Auth
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/createDoctor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       });
 
-      if (signUpError) {
-        console.error("❌ Auth sign-up error details:", signUpError);
-        throw new Error(`Auth sign-up failed: ${signUpError.message}`);
-      }
+      const data = await res.json();
 
-      if (!data.user) {
-        throw new Error("Auth user creation returned null.");
-      }
+      if (!res.ok) throw new Error(data.error || 'Error creating doctor');
 
-      const userId = data.user.id;
-      console.log("✅ Auth user created with ID:", userId);
-
-      // 2️⃣ إنشاء سجل Profile
-      console.log("🔹 Attempting to insert profile...");
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{
-          id: userId,
-          email: formData.email,
-          full_name: formData.fullName,
-          specialty: formData.specialty,
-          role: 'doctor',
-          created_at: new Date().toISOString()
-        }]);
-
-      if (profileError) {
-        console.error("❌ Profile insertion error details:", profileError);
-        // محاولة حذف المستخدم Auth إذا فشل إدراج الـ profile
-        try {
-          console.log("🔹 Attempting to delete Auth user due to profile failure...");
-          await supabase.rpc('delete_user_by_id', { user_id_to_delete: userId });
-          console.log("✅ Auth user deleted after profile failure");
-        } catch (deleteError) {
-          console.error("❌ Failed to delete Auth user:", deleteError);
-        }
-        throw new Error(`Profile insertion failed: ${profileError.message}`);
-      }
-
-      console.log("✅ Profile inserted successfully");
-
-      window.alert(`Doctor added successfully!\nID: ${userId}\nEmail: ${formData.email}`);
-
+      alert(`✅ Doctor created! ID: ${data.userId}`);
       setFormData({ email: '', password: '', fullName: '', specialty: '' });
       setShowForm(false);
-
       fetchDoctorsAndStats();
 
     } catch (err) {
-      console.error('Error creating doctor (full trace):', err);
-      window.alert(`❌ Error creating doctor: ${err.message}`);
+      alert('❌ ' + err.message);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
 
 
 
