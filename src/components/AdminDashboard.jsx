@@ -186,33 +186,123 @@ export default function AdminDashboard() {
   //   }
   // };
 
+
+
+
+  // In AdminDashboard.jsx - Replace the handleCreateDoctor function
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const handleCreateDoctor = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/createDoctor`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+      // 1️⃣ إرسال البيانات للسيرفر المحلي
+      const res = await fetch("http://localhost:3000/createDoctor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
 
+      // 2️⃣ التحقق من نجاح الاستجابة
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Server error response:", errorText);
+        throw new Error(`HTTP ${res.status}: ${errorText}`);
+      }
+
+      // 3️⃣ قراءة البيانات المرسلة من السيرفر
       const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || 'Error creating doctor');
-
       alert(`✅ Doctor created! ID: ${data.userId}`);
-      setFormData({ email: '', password: '', fullName: '', specialty: '' });
+
+      // 4️⃣ إعادة تعيين الفورم وإغلاقه
+      setFormData({ email: "", password: "", fullName: "", specialty: "" });
       setShowForm(false);
+
+      // 5️⃣ تحديث قائمة الأطباء والإحصائيات
       fetchDoctorsAndStats();
 
     } catch (err) {
-      alert('❌ ' + err.message);
-      console.error(err);
+      alert(`❌ Error: ${err.message}\n\nMake sure:\n1. Server is running on http://localhost:3000\n2. .env variables are set correctly\n3. Node server.js is active`);
+      console.error("Full error details:", err);
     } finally {
       setLoading(false);
     }
   };
+
+
+
+
+
+
+
+
+
+
+  // const res = await fetch(functionUrl, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${supabaseAnonKey}`, // Add authorization header
+  //   },
+  //   body: JSON.stringify(formData)
+  // });
+
+
+
+
+
+
+
+
+
+  // ============================================================================
+  // const handleCreateDoctor = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+
+  //   try {
+  //     const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/createDoctor`, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify(formData)
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (!res.ok) throw new Error(data.error || 'Error creating doctor');
+
+  //     alert(`✅ Doctor created! ID: ${data.userId}`);
+  //     setFormData({ email: '', password: '', fullName: '', specialty: '' });
+  //     setShowForm(false);
+  //     fetchDoctorsAndStats();
+
+  //   } catch (err) {
+  //     alert('❌ ' + err.message);
+  //     console.error(err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
 
 
