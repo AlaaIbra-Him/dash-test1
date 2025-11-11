@@ -20,15 +20,27 @@ export default function AppointmentForm({ doctor, onClose }) {
     setLoading(true);
 
     try {
+      // ✅ تأكد من وجود doctor.id
+      if (!doctor.id) {
+        throw new Error("Doctor ID is missing");
+      }
+
+      console.log("📅 Booking appointment for doctor ID:", doctor.id);
+
       // التحقق من أن هذا الموعد غير محجوز
       const { data: existingAppt, error: checkError } = await supabase
         .from('appointments')
         .select('id')
-        .eq('doctor_id', doctor.id)
+        .eq('doctor_id', doctor.id) // ✅ استخدم doctor.id
         .eq('date', formData.date)
         .eq('time', formData.time)
         .eq('status', 'booked')
-        .single();
+        .maybeSingle(); // لأنه قد لا توجد نتائج
+
+      if (checkError) {
+        console.error("Check error:", checkError);
+        throw checkError;
+      }
 
       if (existingAppt) {
         alert('❌ عذراً، هذا الموعد محجوز بالفعل! اختر موعد آخر');
@@ -37,27 +49,29 @@ export default function AppointmentForm({ doctor, onClose }) {
       }
 
       // حجز الموعد
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('appointments')
         .insert([
           {
-            doctor_id: doctor.id,
+            doctor_id: doctor.id, // ✅ استخدم doctor.id من Supabase
             patient_name: formData.patientName,
             age: Number(formData.age),
             phone: formData.phone,
             date: formData.date,
             time: formData.time,
             status: 'booked',
-            is_available: true
+            is_available: true,
+            created_at: new Date().toISOString()
           }
         ]);
 
       if (insertError) throw insertError;
 
+      console.log("✅ Appointment created:", data);
       alert('✅ تم حجز الموعد بنجاح!');
       onClose();
     } catch (err) {
-      console.error('Error:', err);
+      console.error('❌ Error:', err);
       alert(`❌ فشل الحجز: ${err.message}`);
     } finally {
       setLoading(false);
@@ -75,9 +89,11 @@ export default function AppointmentForm({ doctor, onClose }) {
             </button>
           </div>
 
+          {/* ✅ عرض بيانات الدكتور من Supabase */}
           <div className="bg-[#E6F7FB] p-4 rounded-xl mb-6">
-            <h3 className="text-[#0B8FAC] mb-1">{doctor.name}</h3>
-            <p className="text-gray-600">{doctor.specialty}</p>
+            <h3 className="text-[#0B8FAC] mb-1 font-semibold">{doctor.name}</h3>
+            <p className="text-gray-600 text-sm">{doctor.specialty}</p>
+            <p className="text-gray-500 text-xs mt-2">ID: {doctor.id}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

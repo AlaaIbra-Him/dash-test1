@@ -203,47 +203,49 @@ export default function AdminDashboard() {
 
 
 
-
-
-
-
-
-
-
+  // في AdminDashboard.jsx - عدّل handleCreateDoctor
 
   const handleCreateDoctor = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // 1️⃣ إرسال البيانات للسيرفر المحلي
+      // إرسال البيانات للسيرفر
       const res = await fetch("http://localhost:3000/createDoctor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      // 2️⃣ التحقق من نجاح الاستجابة
+      // التحقق من نجاح الاستجابة
       if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Server error response:", errorText);
-        throw new Error(`HTTP ${res.status}: ${errorText}`);
+        const errorData = await res.json();
+        throw new Error(errorData.error || `HTTP ${res.status}`);
       }
 
-      // 3️⃣ قراءة البيانات المرسلة من السيرفر
+      // قراءة البيانات من السيرفر
       const data = await res.json();
-      alert(`✅ Doctor created! ID: ${data.userId}`);
 
-      // 4️⃣ إعادة تعيين الفورم وإغلاقه
+      // ✅ التحقق من نجاح العملية
+      if (!data.success || !data.userId) {
+        throw new Error("Invalid response from server");
+      }
+
+      console.log("✅ Response data:", data);
+
+      // ✅ عرض الـ ID الصحيح
+      alert(`✅ Doctor created successfully!\n\nID: ${data.userId}\nName: ${data.fullName}\nEmail: ${data.email}`);
+
+      // إعادة تعيين الفورم وإغلاقه
       setFormData({ email: "", password: "", fullName: "", specialty: "" });
       setShowForm(false);
 
-      // 5️⃣ تحديث قائمة الأطباء والإحصائيات
+      // تحديث قائمة الأطباء
       fetchDoctorsAndStats();
 
     } catch (err) {
-      alert(`❌ Error: ${err.message}\n\nMake sure:\n1. Server is running on http://localhost:3000\n2. .env variables are set correctly\n3. Node server.js is active`);
-      console.error("Full error details:", err);
+      console.error(" Full error details:", err);
+      alert(` Error: ${err.message}\n\nMake sure:\n1. Server is running on http://localhost:3000\n2. .env variables are set correctly\n3. npm start or node server.js is active`);
     } finally {
       setLoading(false);
     }
@@ -308,29 +310,76 @@ export default function AdminDashboard() {
 
 
   // 5. Delete Doctor (and associated data)
+  // const handleDeleteDoctor = async (doctorId, doctorEmail) => {
+  //   if (!window.confirm(`CONFIRM: Delete doctor: ${doctorEmail} and all associated appointments?`)) return;
+
+  //   try {
+  //     setLoading(true);
+
+  //     // 1. Delete associated appointments first (due to foreign key constraints)
+  //     await supabase.from('appointments').delete().eq('doctor_id', doctorId);
+
+  //     // 2. Delete the doctor profile
+  //     await supabase.from('profiles').delete().eq('id', doctorId);
+
+  //     // 3. Delete the Auth user (Requires correct RLS/Function setup, often done via RPC or Edge Function)
+  //     // await supabase.rpc('delete_user_by_id', { user_id_to_delete: doctorId });
+
+  //     window.alert('✅ Doctor and all associated data deleted successfully.');
+  //     setSelectedDoctor(null);
+  //     setDoctorAppointments([]);
+  //     fetchDoctorsAndStats();
+
+  //   } catch (err) {
+  //     console.error('Error deleting doctor:', err);
+  //     window.alert(`❌ Error: ${err.message}. Ensure Admin has delete permissions on 'profiles' and 'appointments'.`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
+  // في AdminDashboard.jsx - استبدل handleDeleteDoctor كاملة
+
   const handleDeleteDoctor = async (doctorId, doctorEmail) => {
-    if (!window.confirm(`CONFIRM: Delete doctor: ${doctorEmail} and all associated appointments?`)) return;
+    if (!window.confirm(`CONFIRM: Delete doctor: ${doctorEmail} and all associated appointments?`))
+      return;
 
     try {
       setLoading(true);
 
-      // 1. Delete associated appointments first (due to foreign key constraints)
-      await supabase.from('appointments').delete().eq('doctor_id', doctorId);
+      // ✅ استدعي الـ server endpoint (مش Supabase مباشرة)
+      const res = await fetch(`http://localhost:3000/deleteDoctor/${doctorId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
 
-      // 2. Delete the doctor profile
-      await supabase.from('profiles').delete().eq('id', doctorId);
+      // التحقق من الاستجابة
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
 
-      // 3. Delete the Auth user (Requires correct RLS/Function setup, often done via RPC or Edge Function)
-      // await supabase.rpc('delete_user_by_id', { user_id_to_delete: doctorId });
+      const data = await res.json();
 
-      window.alert('✅ Doctor and all associated data deleted successfully.');
+      // ✅ التحقق من نجاح العملية
+      if (!data.success) {
+        throw new Error(data.error || "Delete failed");
+      }
+
+      console.log("✅ Delete response:", data);
+      alert('✅ Doctor and all associated data deleted successfully (Auth + Profile + Appointments).');
+
+      // تحديث الـ state
       setSelectedDoctor(null);
       setDoctorAppointments([]);
+
+      // تحديث قائمة الأطباء والإحصائيات
       fetchDoctorsAndStats();
 
     } catch (err) {
-      console.error('Error deleting doctor:', err);
-      window.alert(`❌ Error: ${err.message}. Ensure Admin has delete permissions on 'profiles' and 'appointments'.`);
+      console.error('❌ Error deleting doctor:', err);
+      alert(`❌ Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -348,7 +397,7 @@ export default function AdminDashboard() {
       fetchDoctorsAndStats();
     } catch (err) {
       console.error('Error deleting appointment:', err);
-      window.alert(`❌ Error: ${err.message}`);
+      window.alert(` Error: ${err.message}`);
     }
   };
 

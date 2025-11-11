@@ -1,26 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X, Heart, Phone, Mail, MapPin } from 'lucide-react';
 import { ImageWithFallback } from './ImageWithFallback';
 import DoctorCard from './DoctorCard';
 import AppointmentForm from './AppointmentForm';
 import AuthModal from './AuthModal';
 import { useNavigate } from 'react-router-dom';
-
-
-const doctors = [
-    { id: 1, name: 'Dr. Sarah Johnson', specialty: 'Neurologist', experience: '15 years', image: 'https://images.unsplash.com/photo-1755189118414-14c8dacdb082?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080', rating: 4.9 },
-    { id: 2, name: 'Dr. Michael Chen', specialty: 'Geriatric Psychiatrist', experience: '12 years', image: 'https://images.unsplash.com/photo-1755189118414-14c8dacdb082?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080', rating: 4.8 },
-    { id: 3, name: 'Dr. Emily Williams', specialty: 'Memory Care Specialist', experience: '10 years', image: 'https://images.unsplash.com/photo-1755189118414-14c8dacdb082?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080', rating: 4.9 },
-    { id: 4, name: 'Dr. James Anderson', specialty: 'Neurologist', experience: '18 years', image: 'https://images.unsplash.com/photo-1755189118414-14c8dacdb082?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080', rating: 5.0 }
-];
+import { supabase } from '../supabaseClient';
 
 export default function LandingPage() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showBookingForm, setShowBookingForm] = useState(false);
     const [selectedDoctor, setSelectedDoctor] = useState(null);
     const [showAuthForm, setShowAuthForm] = useState(null);
+    const [doctors, setDoctors] = useState([]); // ✅ من Supabase
+    const [loading, setLoading] = useState(true);
 
     const navigate = useNavigate();
+
+    // ✅ جلب الأطباء من Supabase
+    useEffect(() => {
+        fetchDoctors();
+
+        // 🔄 استمع للتغييرات في الـ profiles table
+        const subscription = supabase
+            .channel('profiles')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'profiles', filter: 'role=eq.doctor' },
+                (payload) => {
+                    console.log('Doctor changed:', payload);
+                    fetchDoctors(); // ✅ حدّث القائمة مباشرة
+                }
+            )
+            .subscribe();
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, []);
+
+    const fetchDoctors = async () => {
+        try {
+            setLoading(true);
+
+            // جلب الأطباء من profiles table
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('role', 'doctor');
+
+            if (error) throw error;
+
+            // تحويل البيانات لـ format متوافق مع DoctorCard
+            const formattedDoctors = data.map((doctor) => ({
+                id: doctor.id,
+                name: doctor.full_name,
+                specialty: doctor.specialty,
+                experience: doctor.experience || 'Not specified',
+                rating: doctor.rating || 4.8,
+                image: doctor.image_url || 'https://images.unsplash.com/photo-1755189118414-14c8dacdb082?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
+                email: doctor.email,
+            }));
+
+            setDoctors(formattedDoctors);
+            console.log('✅ Doctors loaded:', formattedDoctors);
+        } catch (err) {
+            console.error('❌ Error fetching doctors:', err);
+            setDoctors([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const scrollToSection = (id) => {
         const el = document.getElementById(id);
@@ -128,17 +178,34 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Doctors Section */}
+            {/* Doctors Section - ✅ من Supabase */}
             <section id="doctors" className="py-16 bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-[#0B8FAC] mb-4">Our Expert Doctors</h2>
+                        <p className="text-gray-600 mb-8">
+                            {loading ? 'Loading doctors...' : `${doctors.length} specialists available`}
+                        </p>
                     </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {doctors.map((doctor) => (
-                            <DoctorCard key={doctor.id} doctor={doctor} onBookAppointment={handleBookAppointment} />
-                        ))}
-                    </div>
+
+                    {loading ? (
+                        <div className="flex justify-center items-center min-h-[400px]">
+                            <div className="text-center">
+                                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#0B8FAC]"></div>
+                                <p className="mt-4 text-gray-600">Loading doctors...</p>
+                            </div>
+                        </div>
+                    ) : doctors.length === 0 ? (
+                        <div className="text-center py-12 bg-white rounded-xl shadow-md">
+                            <p className="text-gray-600 text-lg">No doctors available at the moment.</p>
+                        </div>
+                    ) : (
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {doctors.map((doctor) => (
+                                <DoctorCard key={doctor.id} doctor={doctor} onBookAppointment={handleBookAppointment} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -165,7 +232,6 @@ export default function LandingPage() {
                 <p>© 2025 Memora. All rights reserved.</p>
             </footer>
 
-
             {/* Booking Form */}
             {showBookingForm && selectedDoctor && (
                 <AppointmentForm doctor={selectedDoctor} onClose={() => { setShowBookingForm(false); setSelectedDoctor(null); }} />
@@ -176,7 +242,7 @@ export default function LandingPage() {
                 <AuthModal
                     role={showAuthForm}
                     onClose={() => setShowAuthForm(null)}
-                    onLoginSuccess={handleLoginSuccess} // <-- هنا
+                    onLoginSuccess={handleLoginSuccess}
                 />
             )}
         </div>
