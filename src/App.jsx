@@ -3,6 +3,7 @@ import { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import AdminDashboard from './components/AdminDashboard';
+// import DoctorDashboard from './components/DoctorDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
 import { supabase } from './supabaseClient';
 import { translations } from './i18n/translations';
