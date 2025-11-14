@@ -197,9 +197,9 @@ app.post("/createDoctor", async (req, res) => {
 
         // UPDATE profile (trigger already inserted base row)
         const { error: profileError } = await supabaseAdmin
-            .from("profiles")
+            .from("users")
             .update({
-                full_name: fullName,
+                name: fullName,
                 specialty,
                 role: "doctor",
             })
@@ -237,7 +237,7 @@ app.delete("/deleteDoctor/:doctorId", async (req, res) => {
         await supabaseAdmin.from("appointments").delete().eq("doctor_id", doctorId);
 
         // Delete profile
-        await supabaseAdmin.from("profiles").delete().eq("id", doctorId);
+        await supabaseAdmin.from("users").delete().eq("id", doctorId);
 
         // Delete auth user
         await supabaseAdmin.auth.admin.deleteUser(doctorId);

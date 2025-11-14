@@ -1,0 +1,42 @@
+create or replace function public.handle_new_user () returns trigger language plpgsql security definer as $$
+begin
+  insert into public.profiles (id, email, full_name, role)
+  values (new.id, new.email, '', 'doctor');
+
+  insert into public.users (id, email, name, role, is_active, created_at, updated_at)
+  values (
+    new.id, 
+    new.email, 
+    '', 
+    'doctor', 
+    true, 
+    CURRENT_TIMESTAMP, 
+    CURRENT_TIMESTAMP
+  );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+
+create trigger on_auth_user_created
+after insert on auth.users for each row
+execute procedure public.handle_new_user ();
+
+create or replace function public.sync_profile_to_users () returns trigger language plpgsql security definer as $$
+begin
+  update public.users
+  set name = new.full_name, updated_at = CURRENT_TIMESTAMP
+  where id = new.id;
+  
+  return new;
+end;
+$$;
+
+drop trigger if exists on_profile_updated on public.profiles;
+
+create trigger on_profile_updated
+after
+update on public.profiles for each row
+execute procedure public.sync_profile_to_users ();

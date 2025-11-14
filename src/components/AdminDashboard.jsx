@@ -40,8 +40,8 @@ export default function AdminDashboard() {
 
         const userId = session.user.id;
         const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, role')
+          .from('users')
+          .select('name, role')
           .eq('id', userId)
           .single();
 
@@ -49,7 +49,7 @@ export default function AdminDashboard() {
           console.error('Access Denied or Profile Error:', error);
           navigate('/');
         } else {
-          setAdminName(data.full_name || 'Admin');
+          setAdminName(data.name || 'Admin');
         }
       } catch (err) {
         console.error('Auth check error:', err);
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
   const fetchDoctorsAndStats = async () => {
     try {
       const { data: doctorsData, error: doctorsError } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
         .eq('role', 'doctor');
 
@@ -377,7 +377,7 @@ const DoctorsPanel = ({ doctors, selectedDoctor, showForm, setShowForm, formData
             onClick={() => fetchDoctorAppointments(doctor.id)}
             className={`p-4 cursor-pointer border-l-4 transition ${selectedDoctor === doctor.id ? `${darkMode ? 'border-[#0B8FAC] bg-gray-700' : 'border-[#0B8FAC] bg-blue-50'}` : `${darkMode ? 'border-gray-700 hover:bg-gray-700' : 'border-gray-100 hover:bg-gray-50'}`}`}
           >
-            <h3 className={`font-bold truncate ${darkMode ? 'text-white' : 'text-gray-800'}`}>{doctor.full_name}</h3>
+            <h3 className={`font-bold truncate ${darkMode ? 'text-white' : 'text-gray-800'}`}>{doctor.name}</h3>
             <p className="text-[#0B8FAC] text-xs font-medium">{doctor.specialty}</p>
             <p className={`text-xs truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>📧 {doctor.email}</p>
           </div>
@@ -406,7 +406,7 @@ const DoctorDetailsPanel = ({ selectedDoctor, doctors, doctorAppointments, handl
       <div className={`bg-gradient-to-r from-[#0B8FAC] to-blue-600 text-white p-6`}>
         <div className="flex justify-between items-start">
           <div>
-            <h2 className="text-3xl font-extrabold">{doctor.full_name}</h2>
+            <h2 className="text-3xl font-extrabold">{doctor.name}</h2>
             <p className="text-blue-100 mt-1 text-lg">{doctor.specialty}</p>
             <p className="text-blue-200 text-sm mt-2">📧 {doctor.email}</p>
           </div>

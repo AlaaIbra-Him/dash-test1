@@ -21,10 +21,10 @@ export default function LandingPage() {
     useEffect(() => {
         fetchDoctors();
         const subscription = supabase
-            .channel('profiles')
+            .channel('users')
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'profiles', filter: 'role=eq.doctor' },
+                { event: '*', schema: 'public', table: 'users', filter: 'role=eq.doctor' },
                 () => fetchDoctors()
             )
             .subscribe();
@@ -35,7 +35,7 @@ export default function LandingPage() {
         try {
             setLoading(true);
             const { data, error } = await supabase
-                .from('profiles')
+                .from('users')
                 .select('*')
                 .eq('role', 'doctor');
 
@@ -43,7 +43,7 @@ export default function LandingPage() {
 
             const formattedDoctors = data.map((doctor) => ({
                 id: doctor.id,
-                name: doctor.full_name,
+                name: doctor.name,
                 specialty: doctor.specialty,
                 experience: doctor.experience,
                 rating: doctor.rating || 4.8,

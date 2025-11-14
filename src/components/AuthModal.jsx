@@ -22,8 +22,8 @@ export default function AuthModal({ role, onClose, onLoginSuccess }) {
             if (!userId) throw new Error("User ID missing");
 
             const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('full_name, specialty, role')
+                .from('users')
+                .select('name, specialty, role')
                 .eq('id', userId)
                 .single();
 
