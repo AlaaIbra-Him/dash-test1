@@ -26,6 +26,7 @@ export default function DoctorDashboard() {
     const [editMode, setEditMode] = useState(false);
     const [passwordMode, setPasswordMode] = useState(false);
     const [newPassword, setNewPassword] = useState('');
+    // eslint-disable-next-line no-unused-vars
     const [doctorId, setDoctorId] = useState(null);
     const navigate = useNavigate();
 

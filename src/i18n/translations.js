@@ -231,6 +231,7 @@ export const translations = {
         bookedAppts: 'Booked Appointments',
         appointmentFillRate: 'Appointment Fill Rate',
         confirmed: 'Confirmed',
+        action: 'Actions',
 
         // Admin Dashboard
         adminInsights: 'Admin Insights',
