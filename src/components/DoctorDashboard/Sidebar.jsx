@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import { useState, useContext } from 'react';
-import { LogOut, Sun, Moon, X, Users, Calendar, Settings } from 'lucide-react';
-import { AppContext } from '../App';
+import { LogOut, Sun, Moon, X, Users, Calendar, Settings,Menu  } from 'lucide-react';
+import { AppContext } from '../../App';
 import NavItem from './components/NavItem';
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen, activePage, setActivePage, doctor, handleLogout, closeSidebar }) {
@@ -12,7 +12,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, activePage, setAc
             {/* Mobile Menu Button */}
             <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className={`md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
+                className={`md:hidden fixed top-4 right-4 z-50 p-2 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}
             >
                 {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>

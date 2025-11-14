@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppContext } from '../App';
-import { supabase } from '../supabaseClient';
+import { AppContext } from '../../App';
+import { supabase } from '../../supabaseClient';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import AppointmentsPage from './pages/AppointmentsPage';

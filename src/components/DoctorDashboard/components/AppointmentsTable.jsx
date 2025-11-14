@@ -1,10 +1,11 @@
 import { Calendar, Trash2 } from 'lucide-react';
 import { useContext } from 'react';
-import { AppContext } from '../../App';
+import { AppContext } from '../../../App';
 
 export default function AppointmentsTable({ appointments, title, handleDeleteAppointment, isDaily }) {
     const { darkMode } = useContext(AppContext);
 
+    // eslint-disable-next-line no-unused-vars
     const columns = isDaily 
         ? ['Patient', 'Time', 'Phone', 'Age', 'Status', 'Action']
         : ['Patient', 'Date', 'Time', 'Phone', 'Age', 'Status', 'Action'];
@@ -15,11 +16,11 @@ export default function AppointmentsTable({ appointments, title, handleDeleteApp
                 <h3 className="font-bold text-xl">{title}</h3>
             </div>
 
-            {appointments.length === 0 ? (
-                <div className={`text-center py-12 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                    <Calendar className={`w-12 h-12 mx-auto mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`} />
-                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No appointments</p>
-                </div>
+        {appointments.length === 0 ? (
+            <div className={`text-center py-12 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                <Calendar className={`w-12 h-12 mx-auto mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-300'}`} />
+                <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No appointments Today</p>
+            </div>
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full">

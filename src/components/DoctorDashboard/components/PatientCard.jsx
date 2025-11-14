@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AppContext } from '../../App';
+import { AppContext } from '../../../App';
 
 export default function PatientCard({ patient, appointmentCount }) {
     const { darkMode } = useContext(AppContext);

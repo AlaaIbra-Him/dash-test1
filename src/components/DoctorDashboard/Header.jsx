@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { Menu } from 'lucide-react';
-import { AppContext } from '../App';
+import { AppContext } from '../../App';
 
 // eslint-disable-next-line no-unused-vars
 export default function Header({ activePage, sidebarOpen, setSidebarOpen }) {

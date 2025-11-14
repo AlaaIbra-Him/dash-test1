@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AppContext } from '../../App';
+import { AppContext } from '../../../App';
 import ProfileSection from '../components/ProfileSection';
 import PasswordSection from '../components/PasswordSection';
 
@@ -16,6 +16,7 @@ export default function SettingsPage({
     handleSaveProfile,
     handleChangePassword
 }) {
+    // eslint-disable-next-line no-unused-vars
     const { darkMode } = useContext(AppContext);
 
     return (

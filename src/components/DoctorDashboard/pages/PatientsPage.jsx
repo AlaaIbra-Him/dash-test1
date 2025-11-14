@@ -1,6 +1,6 @@
 import { Users } from 'lucide-react';
 import { useContext } from 'react';
-import { AppContext } from '../../App';
+import { AppContext } from '../../../App';
 import PatientCard from '../components/PatientCard';
 
 export default function PatientsPage({ patients, appointments }) {

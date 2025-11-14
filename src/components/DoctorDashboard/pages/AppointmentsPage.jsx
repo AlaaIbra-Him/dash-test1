@@ -1,11 +1,13 @@
+// eslint-disable-next-line no-unused-vars
 import { useState, useContext } from 'react';
 import { Calendar, Trash2 } from 'lucide-react';
-import { AppContext } from '../../App';
+import { AppContext } from '../../../App';
 import StatCard from '../components/StatCard';
 import DateSelector from '../components/DateSelector';
 import AppointmentsTable from '../components/AppointmentsTable';
 
 export default function AppointmentsPage({ appointments, stats, handleDeleteAppointment, selectedDate, setSelectedDate }) {
+    // eslint-disable-next-line no-unused-vars
     const { darkMode, t } = useContext(AppContext);
 
     const appointmentPercentage = stats.totalAppointments > 0
@@ -55,7 +57,7 @@ export default function AppointmentsPage({ appointments, stats, handleDeleteAppo
             {/* Selected Day Appointments */}
             <AppointmentsTable 
                 appointments={selectedDateAppointments}
-                title={`Appointments for ${new Date(selectedDate).toLocaleDateString()}`}
+                title={` Today Appointments ( ${new Date(selectedDate).toLocaleDateString()})`}
                 handleDeleteAppointment={handleDeleteAppointment}
                 isDaily={true}
             />
