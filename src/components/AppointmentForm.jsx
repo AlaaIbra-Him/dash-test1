@@ -1,8 +1,11 @@
-import { useState } from 'react';
+// src/components/AppointmentForm.jsx
+import { useState, useContext } from 'react';
 import { X, User, Phone, Calendar, Clock } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { AppContext } from '../App';
 
 export default function AppointmentForm({ doctor, onClose }) {
+  const { darkMode, t } = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     patientName: '',
@@ -20,22 +23,20 @@ export default function AppointmentForm({ doctor, onClose }) {
     setLoading(true);
 
     try {
-      // ✅ تأكد من وجود doctor.id
       if (!doctor.id) {
         throw new Error("Doctor ID is missing");
       }
 
       console.log("📅 Booking appointment for doctor ID:", doctor.id);
 
-      // التحقق من أن هذا الموعد غير محجوز
       const { data: existingAppt, error: checkError } = await supabase
         .from('appointments')
         .select('id')
-        .eq('doctor_id', doctor.id) // ✅ استخدم doctor.id
+        .eq('doctor_id', doctor.id)
         .eq('date', formData.date)
         .eq('time', formData.time)
         .eq('status', 'booked')
-        .maybeSingle(); // لأنه قد لا توجد نتائج
+        .maybeSingle();
 
       if (checkError) {
         console.error("Check error:", checkError);
@@ -43,17 +44,16 @@ export default function AppointmentForm({ doctor, onClose }) {
       }
 
       if (existingAppt) {
-        alert('❌ عذراً، هذا الموعد محجوز بالفعل! اختر موعد آخر');
+        alert(t.slotTaken);
         setLoading(false);
         return;
       }
 
-      // حجز الموعد
       const { data, error: insertError } = await supabase
         .from('appointments')
         .insert([
           {
-            doctor_id: doctor.id, // ✅ استخدم doctor.id من Supabase
+            doctor_id: doctor.id,
             patient_name: formData.patientName,
             age: Number(formData.age),
             phone: formData.phone,
@@ -68,11 +68,11 @@ export default function AppointmentForm({ doctor, onClose }) {
       if (insertError) throw insertError;
 
       console.log("✅ Appointment created:", data);
-      alert('✅ تم حجز الموعد بنجاح!');
+      alert(t.appointmentBooked);
       onClose();
     } catch (err) {
       console.error('❌ Error:', err);
-      alert(`❌ فشل الحجز: ${err.message}`);
+      alert(`${t.appointmentFailed} ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -80,27 +80,27 @@ export default function AppointmentForm({ doctor, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-colors`}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-[#0B8FAC]">📅 حجز موعد</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <h2 className="text-[#0B8FAC] font-bold text-xl">📅 {t.bookAppointmentTitle}</h2>
+            <button onClick={onClose} className={`p-2 rounded-lg transition ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}>
               <X className="w-6 h-6" />
             </button>
           </div>
 
-          {/* ✅ عرض بيانات الدكتور من Supabase */}
-          <div className="bg-[#E6F7FB] p-4 rounded-xl mb-6">
+          {/* Doctor Info */}
+          <div className={`${darkMode ? 'bg-gray-700' : 'bg-[#E6F7FB]'} p-4 rounded-xl mb-6 transition-colors`}>
             <h3 className="text-[#0B8FAC] mb-1 font-semibold">{doctor.name}</h3>
-            <p className="text-gray-600 text-sm">{doctor.specialty}</p>
-            <p className="text-gray-500 text-xs mt-2">ID: {doctor.id}</p>
+            <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{doctor.specialty}</p>
+            {/* <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>ID: {doctor.id}</p> */}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className={`block mb-2 font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 <User className="w-4 h-4 inline mr-2" />
-                اسم المريض
+                {t.patientName}
               </label>
               <input
                 type="text"
@@ -108,14 +108,14 @@ export default function AppointmentForm({ doctor, onClose }) {
                 value={formData.patientName}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC]"
-                placeholder="أدخل اسم المريض"
+                placeholder={t.enterPatientName}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC] focus:outline-none transition ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-700 mb-2">العمر</label>
+                <label className={`block mb-2 font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{t.age}</label>
                 <input
                   type="number"
                   name="age"
@@ -124,15 +124,15 @@ export default function AppointmentForm({ doctor, onClose }) {
                   min="1"
                   max="120"
                   required
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC]"
-                  placeholder="العمر"
+                  placeholder={t.enterAge}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC] focus:outline-none transition ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                 />
               </div>
 
               <div>
-                <label className="block text-gray-700 mb-2">
+                <label className={`block mb-2 font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   <Phone className="w-4 h-4 inline mr-2" />
-                  الهاتف
+                  {t.phone}
                 </label>
                 <input
                   type="tel"
@@ -140,16 +140,16 @@ export default function AppointmentForm({ doctor, onClose }) {
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC]"
-                  placeholder="رقم الهاتف"
+                  placeholder={t.enterPhone}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC] focus:outline-none transition ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className={`block mb-2 font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 <Calendar className="w-4 h-4 inline mr-2" />
-                التاريخ
+                {t.date}
               </label>
               <input
                 type="date"
@@ -158,23 +158,23 @@ export default function AppointmentForm({ doctor, onClose }) {
                 onChange={handleChange}
                 min={new Date().toISOString().split('T')[0]}
                 required
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC]"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC] focus:outline-none transition ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
               />
             </div>
 
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className={`block mb-2 font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 <Clock className="w-4 h-4 inline mr-2" />
-                الوقت
+                {t.time}
               </label>
               <select
                 name="time"
                 value={formData.time}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC]"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#0B8FAC] focus:outline-none transition ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
               >
-                <option value="">اختر الوقت</option>
+                <option value="">{t.selectTime}</option>
                 <option value="09:00">09:00 AM</option>
                 <option value="10:00">10:00 AM</option>
                 <option value="11:00">11:00 AM</option>
@@ -190,17 +190,17 @@ export default function AppointmentForm({ doctor, onClose }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50"
+                className={`flex-1 px-6 py-3 border-2 rounded-lg font-semibold transition ${darkMode ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'}`}
               >
-                إلغاء
+                {t.cancel}
               </button>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-[#0B8FAC] text-white rounded-lg hover:bg-[#0a7a94] disabled:opacity-50"
+                className="flex-1 px-6 py-3 bg-[#0B8FAC] text-white rounded-lg hover:bg-[#0a7a94] transition disabled:opacity-50 font-semibold"
               >
-                {loading ? 'جاري الحجز...' : 'حجز الموعد'}
+                {loading ? t.loading : t.bookAppointment}
               </button>
             </div>
           </form>
